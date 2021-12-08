@@ -9,6 +9,8 @@ Golang implementation of Reflective load PE from memory
 
 Only Supports x64 unmanaged PE
 
+Supports Zip file ,auto unzip
+
 ## Usage
 - change black list https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L326
 ```
@@ -34,7 +36,8 @@ peLoader(&shellcode,"createthread")
 ```
 Usage:
         Doge-MemX.exe mimikatz.exe
-        
+	Doge-MemX.exe mimikatz.zip
+       
 ```
 
 ## Limitations
