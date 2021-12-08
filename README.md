@@ -24,8 +24,8 @@ tmpArgs := []string{"coffee"}
 
 - new Thread or not https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L372
 ```
-	peLoader(&shellcode,"createthread")
-	//peLoader(&shellcode,"syscall")
+peLoader(&shellcode,"createthread")
+//peLoader(&shellcode,"syscall")
 
 ```
 
