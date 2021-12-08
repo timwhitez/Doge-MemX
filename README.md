@@ -10,19 +10,19 @@ Golang implementation of Reflective load PE from memory
 Only Supports x64 unmanaged PE
 
 ## Usage
-- change black list https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L313
+- change black list https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L326
 ```
 blacklist := []string{
 		//warning!! may cause panic!
 		}
 ```
 
-- change arguments https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L368
+- change arguments https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L381
 ```
 tmpArgs := []string{"coffee"}
 ```
 
-- new Thread or not https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L372
+- new Thread or not https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L386
 ```
 //peLoader(&shellcode,"syscall")
 peLoader(&shellcode,"createthread")
