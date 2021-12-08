@@ -1,11 +1,14 @@
 package lib
 
 import (
+	"archive/zip"
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"regexp"
+	"strings"
 	"syscall"
 	"time"
 	"unsafe"
@@ -140,4 +143,19 @@ func shuffle(in string) string {
 func DecodeB64(message string) string {
 	decoded, _ := base64.StdEncoding.DecodeString(message)
 	return string(decoded)
+}
+
+func ReadZipFile(zByte []byte) ([]byte, error) {
+	zipReader, err := zip.NewReader(bytes.NewReader(zByte), int64(len(zByte)))
+	for _, zipFile := range zipReader.File {
+		if strings.Contains(zipFile.Name,".exe"){
+			f, err := zipFile.Open()
+			if err != nil {
+				return nil, err
+			}
+			defer f.Close()
+			return ioutil.ReadAll(f)
+		}
+	}
+	return nil, err
 }
