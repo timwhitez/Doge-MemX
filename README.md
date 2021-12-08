@@ -32,7 +32,7 @@ Reflect-pe only works for x64 unmanaged PE
 
 It's not stable.
 
-## ref
+## References
 https://github.com/frkngksl/Huan
 https://github.com/ayoul3/reflect-pe
 https://github.com/Binject/debug
