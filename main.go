@@ -183,7 +183,7 @@ func CopySections(pefile *pe.File, image *[]byte, loc uintptr) error {
 }
 
 
-func peLoader(bytes0 *[]byte){
+func peLoader(bytes0 *[]byte,funcExec string){
 	baseAddr := *(*uintptr)(unsafe.Pointer(bytes0))
 	tgtFile := lib.NtH(baseAddr)
 
@@ -245,8 +245,52 @@ func peLoader(bytes0 *[]byte){
 
 	fmt.Println("[+] Binary is running")
 
-	syscall.Syscall(startAddress,0,0,0,0)
+	exec(startAddress,funcExec)
+
+	//syscall.Syscall(startAddress,0,0,0,0)
 }
+
+func exec(startA uintptr,funcExec string){
+	switch funcExec {
+	case "syscall":
+		syscall.Syscall(startA,0,0,0,0)
+
+	case "createthread":
+		createThread := syscall.NewLazyDLL("kernel32").NewProc("CreateThread")
+		resumeThread := syscall.NewLazyDLL("kernel32").NewProc("ResumeThread")
+		waitForSingleObject := syscall.NewLazyDLL("kernel32").NewProc("WaitForSingleObject")
+		fmt.Println("CreateThread...")
+		r1, _, err := createThread.Call(
+			uintptr(0),
+			uintptr(0),
+			startA,
+			uintptr(0),
+			uintptr(0x00000004),
+			uintptr(0))
+		if err != syscall.Errno(0) {
+			syscall.Syscall(startA,0,0,0,0)
+		}else{
+			fmt.Println("ResumeThread...")
+			_, _, err = resumeThread.Call(r1)
+			if err != syscall.Errno(0) {
+				panic(err)
+			}
+			fmt.Println("WaitForSingleObject...")
+			_, _, err = waitForSingleObject.Call(
+				r1,
+				syscall.INFINITE)
+			if err != syscall.Errno(0) {
+				panic(err)
+			}
+			syscall.CloseHandle(syscall.Handle(r1))
+		}
+
+	}
+
+
+}
+
+
 
 func main(){
 	var shellcode []byte
@@ -325,5 +369,5 @@ func main(){
 	for i,_ := range tmpArgs{
 		SysArgs = append(SysArgs,tmpArgs[i])
 	}
-	peLoader(&shellcode)
+	peLoader(&shellcode,"createthread")
 }
