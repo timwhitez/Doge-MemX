@@ -45,5 +45,5 @@ https://github.com/Binject/debug
 https://github.com/Binject/universal
 
 # 🚀Star Trend
-[![Stargazers over time](https://starchart.cc/timwhitez/Doge-MemX/.svg)](https://starchart.cc/timwhitez/Doge-MemX)
+[![Stargazers over time](https://starchart.cc/timwhitez/Doge-MemX.svg)](https://starchart.cc/timwhitez/Doge-MemX)
 
