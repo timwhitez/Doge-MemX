@@ -146,6 +146,7 @@ func DecodeB64(message string) string {
 }
 
 func ReadZipFile(zByte []byte) ([]byte, error) {
+	var file []byte
 	zipReader, err := zip.NewReader(bytes.NewReader(zByte), int64(len(zByte)))
 	for _, zipFile := range zipReader.File {
 		if strings.Contains(zipFile.Name,".exe"){
@@ -153,10 +154,13 @@ func ReadZipFile(zByte []byte) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			file,_ := ioutil.ReadAll(f)
+			file,err = ioutil.ReadAll(f)
 			f.Close()
-			return file, nil
+			break
 		}
+	}
+	if file != nil{
+		return file, nil
 	}
 	return nil, err
 }
