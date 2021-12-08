@@ -43,3 +43,7 @@ https://github.com/frkngksl/Huan
 https://github.com/ayoul3/reflect-pe
 https://github.com/Binject/debug
 https://github.com/Binject/universal
+
+# 🚀Star Trend
+[![Stargazers over time](https://starchart.cc/timwhitez/Doge-Assembly.svg)](https://starchart.cc/timwhitez/Doge-Assembly)
+
