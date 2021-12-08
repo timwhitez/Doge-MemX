@@ -7,6 +7,7 @@ import (
 	"golang.org/x/sys/windows"
 	"io/ioutil"
 	"os"
+	"strings"
 	"syscall"
 	"unsafe"
 
@@ -246,6 +247,7 @@ func peLoader(bytes0 *[]byte,funcExec string){
 	fmt.Println("[+] Binary is running")
 
 	exec(startAddress,funcExec)
+
 	//syscall.Syscall(startAddress,0,0,0,0)
 }
 
@@ -310,6 +312,17 @@ func main(){
 		panic(err)
 	}
 
+	//支持从zip压缩包读取exe
+	if strings.Contains(os.Args[1],".zip"){
+		shellcode,err = lib.ReadZipFile(shellcode)
+		if err != nil{
+			panic(err)
+		}
+		if shellcode == nil{
+			panic(fmt.Errorf("fail to read zip"))
+		}
+	}
+
 	blacklist := []string{
 		//以mimikatz为例，恶意字符串替换
 		//warning!! may cause panic!
@@ -369,5 +382,8 @@ func main(){
 	for i,_ := range tmpArgs{
 		SysArgs = append(SysArgs,tmpArgs[i])
 	}
+
 	peLoader(&shellcode,"createthread")
+	//peLoader(&shellcode,"syscall")
+
 }
