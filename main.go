@@ -299,9 +299,9 @@ func main(){
 	if len(os.Args)!= 2||os.Args[1] == "-h"{
 		fmt.Println("Usage:")
 		fmt.Println("	Doge-MemX.exe mimikatz.exe\n")
+		fmt.Println("	Doge-MemX.exe mimikatz.zip\n")
 		os.Exit(1)
 	}
-
 	fileObj, err := os.Open(os.Args[1])
 	if err != nil{
 		panic(err)
