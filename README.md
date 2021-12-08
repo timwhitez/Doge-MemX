@@ -25,6 +25,13 @@ Usage:
         
 ```
 
+## Limitations
+Reflect-pe only works for x64 dynamic executables.  
+
+Reflect-pe only works for x64 unmanaged PE
+
+It's not stable.
+
 ## ref
 https://github.com/frkngksl/Huan
 https://github.com/ayoul3/reflect-pe
