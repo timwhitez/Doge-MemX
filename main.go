@@ -246,13 +246,13 @@ func peLoader(bytes0 *[]byte,funcExec string){
 	fmt.Println("[+] Binary is running")
 
 	exec(startAddress,funcExec)
-
 	//syscall.Syscall(startAddress,0,0,0,0)
 }
 
 func exec(startA uintptr,funcExec string){
 	switch funcExec {
 	case "syscall":
+		fmt.Println("syscall.Syscall")
 		syscall.Syscall(startA,0,0,0,0)
 
 	case "createthread":
