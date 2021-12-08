@@ -153,9 +153,11 @@ func ReadZipFile(zByte []byte) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
+			file,_ := ioutil.ReadAll(f)
 			f.Close()
-			return ioutil.ReadAll(f)
+			return file, nil
 		}
 	}
 	return nil, err
 }
+
