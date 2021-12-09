@@ -7,7 +7,6 @@ import (
 	"golang.org/x/sys/windows"
 	"strings"
 	"syscall"
-	"unicode/utf16"
 	"unsafe"
 
 	"github.com/timwhitez/Doge-MemX/lib"
@@ -179,7 +178,8 @@ func InjectCmdLn(addr uintptr,argv []string) (err error) {
 	cmdLine := strings.Join(argv, " ")
 	addrCmdLine := createStrPtr(cmdLine)
 
-	runes := utf16.Encode([]rune(cmdLine))
+	//runes := utf16.Encode([]rune(cmdLine))
+	runes,_ := syscall.UTF16FromString(cmdLine)
 	runes = append(runes, 0x00)
 	addrCmdLineUnicode := unsafe.Pointer(&runes[0])
 
