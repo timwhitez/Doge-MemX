@@ -148,9 +148,10 @@ func InjectCommandLineA(addr uintptr,argv []string) (err error) {
 func InjectCommandLineW(addr uintptr,argv []string) (err error) {
 	var sc []byte
 	cmdLine := strings.Join(argv, " ")
-	runes := utf16.Encode([]rune(cmdLine))
-	addrCmdLine := unsafe.Pointer(&runes[0])
-
+	//runes := utf16.Encode([]rune(cmdLine))
+	//addrCmdLine := unsafe.Pointer(&runes[0])
+	runes,_ := syscall.UTF16PtrFromString(cmdLine)
+	addrCmdLine := unsafe.Pointer(runes)
 	// movabs rax, entrypoint
 	// ret
 	opcode := fmt.Sprintf("48b8%xc3", formatPtr(addrCmdLine))
