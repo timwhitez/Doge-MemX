@@ -13,6 +13,8 @@ Supports Zip file ,auto unzip
 
 sleep to bypass AV
 
+ETW bypass & AMSI bypass (default not use)
+
 ## Usage
 - change black list https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L338
 ```
