@@ -11,7 +11,7 @@ Only Supports x64 unmanaged PE
 
 Supports Zip file ,auto unzip
 
-sleep to bypass AV
+sleep to bypass Windows Defender
 
 ETW bypass & AMSI bypass (default not use)
 
