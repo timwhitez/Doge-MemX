@@ -16,19 +16,19 @@ sleep to bypass AV
 ETW bypass & AMSI bypass (default not use)
 
 ## Usage
-- change black list https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L343
+- change black list https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L349
 ```
 blacklist := []string{
 		//warning!! may cause panic!
 		}
 ```
 
-- change arguments https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L398
+- change arguments https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L404
 ```
 tmpArgs := []string{"coffee"}
 ```
 
-- new Thread or not https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L404
+- new Thread or not https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L409
 ```
 //peLoader(&shellcode,"syscall")
 peLoader(&shellcode,"createthread")
