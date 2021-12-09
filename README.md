@@ -11,20 +11,22 @@ Only Supports x64 unmanaged PE
 
 Supports Zip file ,auto unzip
 
+sleep to bypass AV
+
 ## Usage
-- change black list https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L326
+- change black list https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L338
 ```
 blacklist := []string{
 		//warning!! may cause panic!
 		}
 ```
 
-- change arguments https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L381
+- change arguments https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L393
 ```
 tmpArgs := []string{"coffee"}
 ```
 
-- new Thread or not https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L386
+- new Thread or not https://github.com/timwhitez/Doge-MemX/blob/main/main.go#L399
 ```
 //peLoader(&shellcode,"syscall")
 peLoader(&shellcode,"createthread")
