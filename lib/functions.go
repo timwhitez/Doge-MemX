@@ -21,16 +21,15 @@ func NtH(baseAddress uintptr) *IMAGE_NT_HEADERS {
 	return (*IMAGE_NT_HEADERS)(unsafe.Pointer(baseAddress + uintptr((*IMAGE_DOS_HEADER)(unsafe.Pointer(baseAddress)).E_lfanew)))
 }
 
-
 func PtrOffset(ptr unsafe.Pointer, offset uintptr) unsafe.Pointer {
 	return unsafe.Pointer(PtrValue(ptr) + offset)
 }
 
-func GetRelocTable(ntHeader *IMAGE_NT_HEADERS )*IMAGE_DATA_DIRECTORY{
+func GetRelocTable(ntHeader *IMAGE_NT_HEADERS) *IMAGE_DATA_DIRECTORY {
 	returnTable := &ntHeader.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC]
 	if returnTable.VirtualAddress == 0 {
 		return nil
-	}else {
+	} else {
 		return returnTable
 	}
 }
@@ -99,8 +98,15 @@ func Memcpy(src, dst, size uintptr) {
 	}
 }
 
+func Memset(ptr uintptr, c byte, n uintptr) {
+	var i uintptr
+	for i = 0; i < n; i++ {
+		pByte := (*byte)(unsafe.Pointer(ptr + 1))
+		*pByte = c
+	}
+}
 
-func ObfuscateStrings(b []byte, blacklist []string) []byte{
+func ObfuscateStrings(b []byte, blacklist []string) []byte {
 	fmt.Printf("Replapcing %d keywords...\n", len(blacklist))
 	for _, word := range blacklist {
 		b = ReplaceWord(b, word)
@@ -108,7 +114,7 @@ func ObfuscateStrings(b []byte, blacklist []string) []byte{
 	return b
 }
 
-func ReplaceWord(b []byte, word string) []byte{
+func ReplaceWord(b []byte, word string) []byte {
 	newWord := shuffle(word)
 	re := regexp.MustCompile("(?i)" + utf16LeStr(word))
 	b = re.ReplaceAll(b, utf16Le(newWord))
@@ -130,7 +136,6 @@ func utf16LeStr(s string) string {
 	return string(utf16Le(s))
 }
 
-
 func shuffle(in string) string {
 	rand.Seed(time.Now().Unix())
 	inRune := []rune(in)
@@ -149,19 +154,18 @@ func ReadZipFile(zByte []byte) ([]byte, error) {
 	var file []byte
 	zipReader, err := zip.NewReader(bytes.NewReader(zByte), int64(len(zByte)))
 	for _, zipFile := range zipReader.File {
-		if strings.Contains(zipFile.Name,".exe"){
+		if strings.Contains(zipFile.Name, ".exe") {
 			f, err := zipFile.Open()
 			if err != nil {
 				return nil, err
 			}
-			file,err = ioutil.ReadAll(f)
+			file, err = ioutil.ReadAll(f)
 			f.Close()
 			break
 		}
 	}
-	if file != nil{
+	if file != nil {
 		return file, nil
 	}
 	return nil, err
 }
-

