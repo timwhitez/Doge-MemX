@@ -101,7 +101,7 @@ func Memcpy(src, dst, size uintptr) {
 func Memset(ptr uintptr, c byte, n uintptr) {
 	var i uintptr
 	for i = 0; i < n; i++ {
-		pByte := (*byte)(unsafe.Pointer(ptr + 1))
+		pByte := (*byte)(unsafe.Pointer(ptr + i))
 		*pByte = c
 	}
 }
